@@ -67,8 +67,8 @@ public class AuthenticationService {
                 this.emailService.sendEmail(user.getEmail(), AppConstant.EMAIL_VERIFICATION_SUBJECT, emailBody);
                 user.setPasswordVerifiedCode(emailBody);
 //                return user;
-            } else if (this.userRepository.findByEmailAndStatusSeq(user.getEmail(), Status.PENDING.getStatusSeq()).getEmail().equals(user.getEmail())) {
-                user = this.userRepository.findByEmailAndStatusSeq(user.getEmail(), Status.PENDING.getStatusSeq());
+            } else if (this.userRepository.findByEmailAndStatus(user.getEmail(), Status.PENDING.getStatusSeq()).getEmail().equals(user.getEmail())) {
+                user = this.userRepository.findByEmailAndStatus(user.getEmail(), Status.PENDING.getStatusSeq());
                 this.userRepository.save(user);
                 String token = this.jwtTokenUtil.generateTokenWithPinAndEmail(user);
                 String emailBody = AppConstant.EMAIL_VERIFICATION_BODY + token;
@@ -89,14 +89,14 @@ public class AuthenticationService {
         String userEmailOfToken = UserEmailAndPinFromToken.get(1);
         User user = null;
         try {
-            user = this.userRepository.findByEmailAndStatusSeq(userEmailOfToken, Status.PENDING.getStatusSeq());
+            user = this.userRepository.findByEmailAndStatus(userEmailOfToken, Status.PENDING.getStatusSeq());
             if (user != null) {
                 if (this.utilService.matchingEmailGeneratedPinWithActual(userEmailOfToken, generatedPinOfToken) == true && user.getStatus().equals(Status.PENDING.getStatusSeq())) {
                     user.setIsEmailVerified(true);
                     user.setStatus(Status.APPROVED.getStatusSeq());
                     user.setRoleSeq(Role.USER.getRoleSeq());
                     this.userRepository.saveAndFlush(user);
-                    user = this.userRepository.findByEmailAndStatusSeq(userEmailOfToken, Status.APPROVED.getStatusSeq());
+                    user = this.userRepository.findByEmailAndStatus(userEmailOfToken, Status.APPROVED.getStatusSeq());
                 } else {
                     throw new BadResponseException("The Request Cannot Be Fulfilled Due To Bad Syntax Exception.");
                 }
@@ -111,7 +111,7 @@ public class AuthenticationService {
 
     public User loadUserByLogin(SignUpDto signUpDto) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        User user = this.userRepository.findByEmailAndStatusSeq(signUpDto.getEmail(), Status.APPROVED.getStatusSeq());
+        User user = this.userRepository.findByEmailAndStatus(signUpDto.getEmail(), Status.APPROVED.getStatusSeq());
         if (user.getStatus().equals(Status.APPROVED.getStatusSeq())) {
             Authentication authentication = authenticationRepository.findByUser(user.getUserSeq());
             String hashedPassword = authentication.getPassword();
@@ -129,7 +129,7 @@ public class AuthenticationService {
         LOGGER.info("Enter sendEmailForPasswordResetRequest() in UserService.");
         String response = null;
         try {
-            User user = this.userRepository.findByEmailAndStatusSeq(email, Status.APPROVED.getStatusSeq());
+            User user = this.userRepository.findByEmailAndStatus(email, Status.APPROVED.getStatusSeq());
             if (user != null) {
                 user.setPasswordVerifiedCode(UtilService.generateRandomString());
                 user.setIsPasswordReset(false);
@@ -154,12 +154,12 @@ public class AuthenticationService {
             List<String> UserEmailAndPinFromToken = this.jwtTokenUtil.getUserEmailAndPinFromToken(token);
             String generatedPinOfToken = UserEmailAndPinFromToken.get(0);
             String userEmailOfToken = UserEmailAndPinFromToken.get(1);
-            user = this.userRepository.findByEmailAndStatusSeq(userEmailOfToken, Status.APPROVED.getStatusSeq());
+            user = this.userRepository.findByEmailAndStatus(userEmailOfToken, Status.APPROVED.getStatusSeq());
             if (user != null && passwordResetDto.getNewPassword().equals(passwordResetDto.getConfirmPassword()) && user.getIsPasswordReset() == false) {
                 if (utilService.matchingEmailGeneratedPinWithActual(userEmailOfToken, generatedPinOfToken) == true) {
                     user.setIsPasswordReset(true);
                     this.userRepository.saveAndFlush(user);
-                    user = this.userRepository.findByUserSeqAndStatusSeq(user.getUserSeq(), Status.APPROVED.getStatusSeq());
+                    user = this.userRepository.findByUserSeqAndStatus(user.getUserSeq(), Status.APPROVED.getStatusSeq());
                     Authentication authentication = this.authenticationRepository.findByUser(user.getUserSeq());
                     authentication.setPassword(UtilService.bCryptPassword(passwordResetDto.getNewPassword()));
                     this.authenticationRepository.saveAndFlush(authentication);

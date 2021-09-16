@@ -67,7 +67,7 @@ public class JwtRequestFilter extends OncePerRequestFilter implements HandlerInt
         // Once we get the token validate it.
         try {
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                User user = this.userRepository.findByEmailAndStatusSeq(email, Status.APPROVED.getStatusSeq());
+                User user = this.userRepository.findByEmailAndStatus(email, Status.APPROVED.getStatusSeq());
                 if (jwtTokenUtil.validateToken(jwtToken, user)) {
                     CurrentUser.setUser(user);
                     chain.doFilter(request, response);

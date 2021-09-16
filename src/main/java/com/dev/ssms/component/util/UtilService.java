@@ -49,7 +49,7 @@ public class UtilService {
     //Check user availability
     public boolean checkUserAvailability(String email) {
         Boolean exist;
-        User user = userRepository.findByEmailAndStatusSeq(email, Status.APPROVED.getStatusSeq());
+        User user = userRepository.findByEmailAndStatus(email, Status.APPROVED.getStatusSeq());
         if (user != null){
             exist = true;
         } else {
@@ -61,7 +61,7 @@ public class UtilService {
     //Checking email generated pin with actual pin
     public Boolean matchingEmailGeneratedPinWithActual(String email, String pinFromEmail) {
         Boolean status = null;
-        User user = userRepository.findByEmailAndStatusSeq(email, Status.PENDING.getStatusSeq());
+        User user = userRepository.findByEmailAndStatus(email, Status.PENDING.getStatusSeq());
         String pinFromDatabase = user.getEmailVerifiedCode();
         if (pinFromDatabase.equalsIgnoreCase(pinFromEmail)){
             status = true;
